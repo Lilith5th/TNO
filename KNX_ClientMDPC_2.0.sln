@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29318.209
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "KNX_ClientMDPC_2.0", "KNX_ClientMDPC_2.0.pyproj", "{E93B53A8-D618-4F05-ABFF-0401143B4204}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E93B53A8-D618-4F05-ABFF-0401143B4204}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E93B53A8-D618-4F05-ABFF-0401143B4204}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7969FF5D-B41C-485B-8455-AFB0D48E5ED9}
+	EndGlobalSection
+EndGlobal

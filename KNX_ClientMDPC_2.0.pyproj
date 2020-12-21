@@ -1,0 +1,136 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>e93b53a8-d618-4f05-abff-0401143b4204</ProjectGuid>
+    <ProjectHome>
+    </ProjectHome>
+    <StartupFile>EmailNotice.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>KNX_ClientMDPC_2.0</Name>
+    <RootNamespace>KNX_ClientMDPC</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="EmailNotice.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="KNX_ClientMDPC.py" />
+    <Compile Include="LKNX\LKNX_Errors.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\LKNX_Singleton.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\LKNX_stdoutData.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\LKNX_TelegramData.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\LKNX_AddressData.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\LKNX_ReadWriteValue.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GAD_table_mapper.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\LKNX_flags.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\LKNX_ProjectSettings.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DATA_KNXAdresses.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LKNX\module1.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="plot.py" />
+    <Compile Include="pyknyx\common\config.py" />
+    <Compile Include="pyknyx\common\exception.py" />
+    <Compile Include="pyknyx\common\singleton.py" />
+    <Compile Include="pyknyx\common\utils.py" />
+    <Compile Include="pyknyx\dpt.py" />
+    <Compile Include="pyknyx\dptId.py" />
+    <Compile Include="pyknyx\dptXlator2ByteFloat.py" />
+    <Compile Include="pyknyx\dptXlator2ByteSigned.py" />
+    <Compile Include="pyknyx\dptXlator2ByteUnsigned.py" />
+    <Compile Include="pyknyx\dptXlator3BitControl.py" />
+    <Compile Include="pyknyx\dptXlator4ByteFloat.py" />
+    <Compile Include="pyknyx\dptXlator4ByteSigned.py" />
+    <Compile Include="pyknyx\dptXlator8BitEncAbsValue.py" />
+    <Compile Include="pyknyx\dptXlator8BitSigned.py" />
+    <Compile Include="pyknyx\dptXlator8BitUnsigned.py" />
+    <Compile Include="pyknyx\dptXlatorBase.py" />
+    <Compile Include="pyknyx\dptXlatorBoolean.py" />
+    <Compile Include="pyknyx\dptXlatorDate.py" />
+    <Compile Include="pyknyx\dptXlatorFactory.py" />
+    <Compile Include="pyknyx\dptXlatorString.py" />
+    <Compile Include="pyknyx\dptXlatorTime.py" />
+    <Compile Include="pyknyx\exception.py" />
+    <Compile Include="pyknyx\groupAddressTableMapper.py" />
+    <Compile Include="pyknyx\loggerX.py" />
+    <Compile Include="pyknyx\services\groupAddressTableMapper.py" />
+    <Compile Include="pyknyx\services\logger.py" />
+    <Compile Include="pyknyx\services\loggerFormatter.py" />
+    <Compile Include="pyknyx\stack\a_groupDataService.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="LClasses\" />
+    <Folder Include="LKNX\" />
+    <Folder Include="pyknyx\" />
+    <Folder Include="pyknyx\common\" />
+    <Folder Include="pyknyx\common\__pycache__\" />
+    <Folder Include="pyknyx\services\" />
+    <Folder Include="pyknyx\services\__pycache__\" />
+    <Folder Include="pyknyx\stack\" />
+    <Folder Include="pyknyx\__pycache__\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="pyknyx\common\__pycache__\config.cpython-37.pyc" />
+    <Content Include="pyknyx\common\__pycache__\exception.cpython-37.pyc" />
+    <Content Include="pyknyx\common\__pycache__\singleton.cpython-37.pyc" />
+    <Content Include="pyknyx\common\__pycache__\utils.cpython-37.pyc" />
+    <Content Include="pyknyx\services\__pycache__\logger.cpython-37.pyc" />
+    <Content Include="pyknyx\services\__pycache__\loggerFormatter.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dpt.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptId.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlator2ByteFloat.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlator2ByteSigned.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlator2ByteUnsigned.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlator8BitEncAbsValue.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlator8BitSigned.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlator8BitUnsigned.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlatorBase.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlatorBoolean.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlatorDate.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlatorFactory.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\dptXlatorTime.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\exception.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\groupAddressTableMapper.cpython-37.pyc" />
+    <Content Include="pyknyx\__pycache__\logger.cpython-37.pyc" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>
