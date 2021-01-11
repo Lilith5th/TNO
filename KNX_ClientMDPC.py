@@ -1,5 +1,5 @@
 import threading
-                                    
+import os                                
 import json 
 import requests 
 import serial
@@ -8,16 +8,16 @@ import subprocess
 import logging
 import random
 from DATA_KNXAdresses import GAD_MAP_TABLE_OUTSIDE
-from pysolar.solar import *
-import datetime
+from datetime import datetime
 
 from LKNX.LKNX_Singleton import Singleton
 from LKNX.LKNX_ProjectSettings import ProjectSettings
-from LKNX.LKNX_ReadWriteValue import *
-from datetime import datetime
+from LKNX.LKNX_ReadWriteValue import KNXReader, KNXWriter
+
 from EmailNotice import EmailError
-import os
+
 import traceback
+import uuid 
 
 
             
@@ -74,37 +74,67 @@ def startLogging():
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S')
 
-def setup_logger(name, level=logging.INFO):
+def setup_logger(name):
     """To setup as many loggers as you want"""
     from datetime import datetime
-    curFilename = os.path.join(log_dir, "{}_{}.log".format(datetime.now().strftime("%Y_%m_%d"), name))
-    handler = logging.FileHandler(curFilename, mode='a')    
-    #handler.setFormatter('%(asctime)s %(message)s')
+    log_dir = os.path.join(os.getcwd() ,"Logs")  
+    log_dir_current = os.path.join(log_dir,name)  
+    if not os.path.exists(log_dir_current):
+        os.makedirs(log_dir_current)    
+    
+    curFilename = os.path.join(log_dir_current, "{}_{}.log".format(datetime.now().strftime("%Y_%m_%d"), name))
+    formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
+    
+
+    handler = logging.FileHandler(curFilename, mode='a')
+    handler.setFormatter(formatter)
+      
+    #screen_handler = logging.StreamHandler(stream=sys.stdout)
+    #screen_handler.setFormatter(formatter)
+     
+    #logging.basicConfig(level=logging.DEBUG,)
     logger = logging.getLogger(name)
-    logger.setLevel(level)
+    logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
+    #logger.addHandler(screen_handler)
     return logger
     
 def setup_CSV_logger(name, level=logging.INFO):
     """To setup as many loggers as you want"""
     from datetime import datetime
-    curFilename = os.path.join(log_dir_csv, "{}_{}.csv".format(datetime.now().strftime("%Y_%m_%d"), name))
-    handler = logging.FileHandler(curFilename, mode='a')    
+    log_dir = os.path.join(os.getcwd() ,"Logs")  
+    log_dir_current = os.path.join(log_dir,name)  
+    if not os.path.exists(log_dir_current):
+        os.makedirs(log_dir_current)    
+    
+    curFilename = os.path.join(log_dir_current, "{}_{}.csv".format(datetime.now().strftime("%Y_%m_%d"), name))
+    formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                              datefmt='%Y-%m-%d %H:%M:%S')
+    
+
+    handler = logging.FileHandler(curFilename, mode='a')
+    handler.setFormatter(formatter)
+      
+    #screen_handler = logging.StreamHandler(stream=sys.stdout)
+    #screen_handler.setFormatter(formatter)
+     
+    #logging.basicConfig(level=logging.DEBUG,)
     logger = logging.getLogger(name)
-    logger.setLevel(level)
+    logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
-    return logger   
+    #logger.addHandler(screen_handler)
+    return logger 
 
-LOG_MAIN= setup_logger('MAIN_LOG')
-LOG_KIPP = setup_logger('KippZonenLog')
-LOG_KNX_SENSORS = setup_logger('KNX_SensorLog')
-LOG_KNX_BLINDS = setup_logger('KNX_Blinds_Log')
-LOG_KNX_STDOUT = setup_logger('KNX_STDOUT_Log')
-LOG_SERVER_VALUES = setup_logger('MPC_Changes_Log')
-LOG_SENT_VALUES = setup_logger('Sent_Values_Log')
+LOG_MAIN= setup_logger('MAIN')
+LOG_KIPP = setup_logger('Kipp')
+LOG_VBUS = setup_logger('Vbus')
 
-LOG_KNX_SENSORS_CSV = setup_CSV_logger('KNX_SENSORS')
-LOG_KNX_BLINDS_CSV = setup_CSV_logger('BLINDS_POS')
+LOG_KNX_BLINDS = setup_logger('Blinds')
+
+LOG_SENT_RECIEVED = setup_logger('Sent_Recieved')
+LOG_KNX_SENSORS_CSV = setup_CSV_logger('CSV_SENSORS')#NOT USED
+LOG_KNX_BLINDS_CSV = setup_CSV_logger('CSV_BLINDS')#NOT USED
 
 
 #use g_XXX prefix for singleton instances (global data storrage)
@@ -115,6 +145,8 @@ class currentValues(metaclass=Singleton):
     STATUS_SENSORS_PASSIVE = ""
     STATUS_BLINDS = ""
     STATUS = str("{} {} {} {}".format(STATUS_KIPP,STATUS_SENSORS_KNX,STATUS_SENSORS_PASSIVE,STATUS_BLINDS))
+    
+    ID= uuid.uuid1()
     
     GAD_TABLE = None
     
@@ -173,6 +205,7 @@ class currentValues(metaclass=Singleton):
 
     def getUpdatedValues(self):
         KNX().refreshKNXData()
+         
         try:
             time = {'time': datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}
             status = {'status':str(self.STATUS)}
@@ -180,6 +213,7 @@ class currentValues(metaclass=Singleton):
                          'UI_Ang': self.UIControls['UI_Ang']['value']}}
 
             sensors = {}
+
             for key in self.SENSORS:
                 sensors[key] = self.SENSORS[key]['value']
 
@@ -205,7 +239,7 @@ class currentValues(metaclass=Singleton):
         except Exception as e:
             print(e)
             print("KNX getUpdatedValues... error getting updated values.{}".format(e))
-            raise Exception 
+            #raise Exception 
 
     def updateKippZonenData(self,radiationSky,radiationIndoor,radiationFacade):
             self.SENSORS['radiationSky']['value'] = radiationSky
@@ -223,8 +257,10 @@ class currentValues(metaclass=Singleton):
         longitude_deg = 3.66410 # negative reckoning west from prime meridian in Greenwich, England (Drongen
                                 # 3.66)
 
+        from pysolar.solar import get_position
+        from pysolar.radiation import get_radiation_direct   
         sun_azimuth, sun_altitude = get_position(latitude_deg, longitude_deg, date,elevation=4)
-        expectedRad = radiation.get_radiation_direct(date, latitude_deg)
+        expectedRad = get_radiation_direct(date, latitude_deg)
         return sun_azimuth, sun_altitude 
 
 
@@ -266,7 +302,7 @@ class KippZonen(threading.Thread):
 
             except Exception as e:
                 g_DATA = currentValues()
-                g_DATA.STATUS_KIPP = "error acquiring pyranometer values. Service will be restarted".format(restartCounter)
+                g_DATA.STATUS_KIPP = "error acquiring pyranometer values. Service will be restarted".format(self.restartCounter)
                 self.running = False
                 print(e)
                 if self.restartCounter < 10:
@@ -276,8 +312,6 @@ class KippZonen(threading.Thread):
                     error = EmailError()
                     error.emailMe("error in serial port data listening... tried restarting 10x...shutting it down. \n {}".format(e))
                     raise Exception(e)
-
-
                                   
 class KNX(object):
     errors = list()
@@ -324,7 +358,7 @@ class KNX(object):
 
         except Exception as e:
             error = EmailError()
-            print(e)
+            print("KNX error".format(e))
             error.emailMe("error in refreshing data... \n {}".format(e))
             raise Exception
 
@@ -346,7 +380,7 @@ class KNX(object):
                 if  'disabled' in self.g_DATA.SENSORS[key]['flags']:
                     if  'useRange' in self.g_DATA.SENSORS[key]['flags']:
                         self.g_DATA.SENSORS[key]['value'] = random.randrange(self.g_DATA.SENSORS[key]['range'][0],self.g_DATA.SENSORS[key]['range'][1])
-                        sensorErrors.append("presence sensor is using random values for testing purposes. Device not functioning")
+                        #sensorErrors.append("presence sensor is using random values for testing purposes. Device not functioning")
                     continue
     
                 try:
@@ -364,8 +398,8 @@ class KNX(object):
                     self.g_DATA.SENSORS[key]['value'] = str(value)[:5]
                     self.g_DATA.SENSORS[key]['error'] = "OK"
 
-            self.g_DATA.STATUS_SENSORS_KNX =  sensorErrors.__str__    #TODO STARTED UPDATING
-            self.g_DATA.SENSORS['sensor error']= self.g_DATA.STATUS_SENSORS_KNX
+            #self.g_DATA.STATUS_SENSORS_KNX =  sensorErrors.__str__    #TODO STARTED UPDATING
+            #self.g_DATA.SENSORS['sensor_error']= self.g_DATA.STATUS_SENSORS_KNX
             print ('got sensor values')
             
         except Exception as e:
@@ -387,17 +421,12 @@ class KNX(object):
             if "error" in values[1]:
                 errorCount+=1
                 blindsErrors.append(str(key))
-        #self.g_DATA.STATUS_BLINDS = blindsErrors.__str__    #TODO STARTED UPDATING
-
-                    
+        
+        self.g_DATA.STATUS_BLINDS = blindsErrors.__str__    #TODO STARTED UPDATING                    
         if errorCount != 0:
             error = EmailError()
             error.emailMe("{} error(s) in reading blind positions".format(errorCount))
-            if   self.g_DATA.STATUS == "OK":
-                self.g_DATA.STATUS = ("{} error(s) in blinds".format(errorCount))
-                return
-            self.g_DATA.STATUS = self.g_DATA.STATUS + (", {} error(s) in reading blind positions".format(errorCount))
-
+ 
 
     def getValueByName(self,groupName):
         error = ''
@@ -410,6 +439,7 @@ class KNX(object):
 class KNXVbusMonitor(threading.Thread):
     running = False
     restartCounter = 0
+    restartScript=False
     def __init__(self, *args, **kwargs):
         print("vbusmonitor init")
         threading.Thread.__init__(self)
@@ -421,6 +451,7 @@ class KNXVbusMonitor(threading.Thread):
             self.running = True
             popen = subprocess.Popen('knxtool vbusmonitor1 local:',shell=True, stdout=subprocess.PIPE,stderr =subprocess.PIPE, universal_newlines=True)
             for stdout_line in iter(popen.stdout.readline, ''):
+                LOG_MAIN.info("VBUS MONITOR RUNNING")
                 try:
                     self.process_stdoutCommand(stdout_line)
                     self.g_DATA.STATUS_KNX_SENSORS_PASSIVE = "OK"
@@ -428,6 +459,7 @@ class KNXVbusMonitor(threading.Thread):
                     print('ERROR: error processing stdout_line error: {}\n trackback: {}'.format(e,e.__trackback__))
 
         except Exception as e:
+            LOG_VBUS.error("           !!!VBUS MONITOR ERROR!!!")
             self.g_DATA.STATUS_KNX_SENSORS_PASSIVE = "error acquiring passive KNX values. Service will be restarted".format(self.restartCounter)
             self.running = False
             print("ERROR: vbusError: {}".format(e))
@@ -436,6 +468,7 @@ class KNXVbusMonitor(threading.Thread):
                 self.restartCounter = self.restartCounter + 1
                 self.run()
             else:
+                self.restartScript=True
                 error = EmailError()
                 error.emailMe("error in vbusmonitor... tried restarting 10x...shutting it down. \n {}".format(e))
                 raise Exception(e)
@@ -445,15 +478,11 @@ class KNXVbusMonitor(threading.Thread):
             from LKNX.LKNX_stdoutData import stdoutData 
             recievedStdout= None
             try:     
-                print (stdout_line)                    
                 recievedStdout = stdoutData(stdout_line)
-                print ('stdout line is:')
-                print (recievedStdout)
             except:
-                print ('exception')
+                print ('exception in processing stdoutCommand')
                 return
-            
-            
+        
             if "inactive" in recievedStdout.flagsString.lower():
                 return
             if "ispassive" not in recievedStdout.flagsString.lower():
@@ -465,6 +494,7 @@ class KNXVbusMonitor(threading.Thread):
             
         except Exception as e:
             print('ERROR: processing stdoutCommand {}'.format(e))
+            
 
 
 
@@ -483,21 +513,23 @@ class ConnectToServer(threading.Thread):
         firstRun = True
         locaJSONData = dict()
         waitTime = 300
-        while True:
+        print ("starting while loop...")
+        while True:            
             LOG_MAIN.info("MAIN CLIENT-SERVER LOOP RUNNING")
             runCounter=runCounter+1
             print ("connecting to server for the {}x time\run started on:{}".format(runCounter, runStartedTime))            
             try:
                 print("while loop... get updated values...")
+                print (self.g_DATA)
                 localJSONData = self.g_DATA.getUpdatedValues() 
                 print("LocalJsonData:",
                         json.dumps(localJSONData, sort_keys=True, indent=4))
-                
+                #continue
                 time.sleep(5)
 
-                if runCounter==1:#we do this to prevent 800 values at the start
-                    time.sleep(waitTime)
-                    continue
+#                if runCounter==1:#we do this to prevent 800 values at the start
+#                    time.sleep(waitTime)
+#                    continue
 
                 server_BlindsData = self.getServerData(localJSONData)
                 print("ServerJsonData:",
@@ -509,14 +541,18 @@ class ConnectToServer(threading.Thread):
                     
                 time.sleep(5)
                 
+                print ('comparing and moving blinds...')
                 self.compareAndupdatePhysicalBlindsPosition(server_BlindsData,localJSONData)
+                
+                time.sleep(5)
+                
                 print("waiting 300 seconds to send new data to server...")
                 time.sleep(waitTime)
                 
             except Exception as e:
-                emailNotice = EmailError()
-                emailNotice.emailMe(e)
                 print("error ... waiting 300 seconds to try send new data to server...\n{}".format(e))
+                #emailNotice = EmailError()
+                #emailNotice.emailMe(e)
                 time.sleep(waitTime)
             
 
@@ -526,8 +562,8 @@ class ConnectToServer(threading.Thread):
         try:
             r = requests.post(self.g_SETTINGS.ServerIP + '/MBPC/b', timeout=50, json=current_blinds_values)
             server_blinds_values = r.json()
-            LOG_SENT_VALUES.info(current_blinds_values)
-            LOG_SERVER_VALUES.info(server_blinds_values)
+            LOG_SENT_RECIEVED.info(current_blinds_values)
+            LOG_SENT_RECIEVED.info(server_blinds_values)
 
             if 'error' in server_blinds_values['status']:
                 return server_blinds_values
@@ -645,6 +681,22 @@ class PeriodicCamera(threading.Thread):
         print(r.text)
 
 
+class StartInfo:
+    g_SETTINGS = ProjectSettings()
+    g_DATA = currentValues()
+    def __init__(self,serverIp, *args, **kwargs):
+        self.serverIp=serverIp
+        
+    def SendInfo(self):
+        info = {'time': datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), 
+                 'status':"STARTING NEW SESSION. SESSION ID {} .".format(self.g_DATA.ID)}
+        r = requests.post(self.g_SETTINGS.ServerIP + '/MBPC/b', timeout=10, json=info)     
+        response = r.json()
+        print (info)
+        print (response)
+
+
+
 ''' experiments '''
 if __name__ == "__main__2":
     kipLogger = KippZonen()
@@ -694,6 +746,9 @@ def testing():
         KNXWriter(name='b0_Set_Pos', value='50')
 
 def main():
+    
+    #StartInfo().SendInfo()
+    
     '''start logging KippZonen data'''
     KippZonen().start()
     '''
@@ -714,11 +769,13 @@ if __name__ == "__main__":
         g_DATA = currentValues()
         g_DATA.GAD_TABLE = GAD_MAP_TABLE_OUTSIDE
         startLogging()
+        
         main()
     
     except Exception as e:
         emailNotice = EmailError()
         emailNotice.emailMe(e)
+        quit ()
         
 
 #exception in stdoutData2int!tuple index out of range

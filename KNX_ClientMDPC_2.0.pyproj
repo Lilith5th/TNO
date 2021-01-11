@@ -88,6 +88,9 @@
     <Compile Include="pyknyx\services\logger.py" />
     <Compile Include="pyknyx\services\loggerFormatter.py" />
     <Compile Include="pyknyx\stack\a_groupDataService.py" />
+    <Compile Include="SunPosition.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="LClasses\" />
